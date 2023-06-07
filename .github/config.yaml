@@ -29,14 +29,3 @@ jobs:
           remote_user: wagumi
           remote_port: 57822
           remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: make id_rsa
-        run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" >> .id_rsa
-          chmod 600 .id_rsa
-      - name: ssh connert and pm2 run
-        run: |
-          ssh -t -t -o "StrictHostKeyChecking no" -i .id_rsa wagumi-prod-jpe-001.japaneast.cloudapp.azure.com "
-          cd /home/wagumi/apps/members-db-updater
-          npm install
-          pm2 start main.js --cron-restart="10 0 * * *”
-          "
