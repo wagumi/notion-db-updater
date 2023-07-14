@@ -52,7 +52,11 @@ const start = async () => {
             //&& false
         );
         if (!result) {
-            await updateMember(members_discord[i]);
+            try {
+                await updateMember(members_discord[i]);
+            } catch (e) {
+                console.log(e);
+            }
         }
     }
 
@@ -62,7 +66,11 @@ const start = async () => {
         );
         if (!result) {
             console.log("ADD", members_discord[i]);
-            await addMember(members_discord[i]);
+            try {
+                await addMember(members_discord[i]);
+            } catch (e) {
+                console.log(e);
+            }
         }
     }
 
@@ -108,38 +116,34 @@ async function updateMember(member) {
             },
         });
     }
-    try {
-        const update = await client.pages.update({
-            page_id: page.id,
+    const update = await client.pages.update({
+        page_id: page.id,
+        icon: {
+            type: "external",
+            external: {
+                url: member.icon,
+            },
+        },
+        properties: {
+            name: {
+                title: [{ text: { content: member.name } }],
+            },
+            roles: {
+                multi_select: roles,
+            },
+            join: {
+                date: {
+                    start: member.join,
+                },
+            },
+            id: {
+                rich_text: [{ text: { content: member.id } }],
+            },
             icon: {
-                type: "external",
-                external: {
-                    url: member.icon,
-                },
+                files: icon,
             },
-            properties: {
-                name: {
-                    title: [{ text: { content: member.name } }],
-                },
-                roles: {
-                    multi_select: roles,
-                },
-                join: {
-                    date: {
-                        start: member.join,
-                    },
-                },
-                id: {
-                    rich_text: [{ text: { content: member.id } }],
-                },
-                icon: {
-                    files: icon,
-                },
-            },
-        });
-    } catch (e) {
-        console.log(e);
-    }
+        },
+    });
     //console.log(update);
 }
 
