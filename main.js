@@ -52,11 +52,7 @@ const start = async () => {
             //&& false
         );
         if (!result) {
-            try {
-                await updateMember(members_discord[i]);
-            } catch (e) {
-                console.log(e);
-            }
+           await updateMember(members_discord[i]);
         }
     }
 
@@ -66,11 +62,7 @@ const start = async () => {
         );
         if (!result) {
             console.log("ADD", members_discord[i]);
-            try {
-                await addMember(members_discord[i]);
-            } catch (e) {
-                console.log(e);
-            }
+            await addMember(members_discord[i]);
         }
     }
 
@@ -116,34 +108,38 @@ async function updateMember(member) {
             },
         });
     }
-    const update = await client.pages.update({
-        page_id: page.id,
-        icon: {
-            type: "external",
-            external: {
-                url: member.icon,
-            },
-        },
-        properties: {
-            name: {
-                title: [{ text: { content: member.name } }],
-            },
-            roles: {
-                multi_select: roles,
-            },
-            join: {
-                date: {
-                    start: member.join,
+    try {
+        const update = await client.pages.update({
+            page_id: page.id,
+            icon: {
+                type: "external",
+                external: {
+                    url: member.icon,
                 },
             },
-            id: {
-                rich_text: [{ text: { content: member.id } }],
+            properties: {
+                name: {
+                    title: [{ text: { content: member.name } }],
+                },
+                roles: {
+                    multi_select: roles,
+                },
+                join: {
+                    date: {
+                        start: member.join,
+                    },
+                },
+                id: {
+                    rich_text: [{ text: { content: member.id } }],
+                },
+                icon: {
+                    files: icon,
+                },
             },
-            icon: {
-                files: icon,
-            },
-        },
-    });
+        });
+    } catch (e) {
+        console.log(e);
+    }
     //console.log(update);
 }
 
@@ -177,36 +173,40 @@ async function addMember(member) {
             },
         });
     }
-    const response = await client.pages.create({
-        parent: {
-            database_id: "4389eeef-9d7f-43bc-a848-3d47c016a764",
-        },
-        icon: {
-            type: "external",
-            external: {
-                url: member.icon,
-            },
-        },
-        properties: {
-            name: {
-                title: [{ text: { content: member.name } }],
-            },
-            id: {
-                rich_text: [{ text: { content: member.id } }],
+    try {
+        const response = await client.pages.create({
+            parent: {
+                database_id: "4389eeef-9d7f-43bc-a848-3d47c016a764",
             },
             icon: {
-                files: icon,
-            },
-            roles: {
-                multi_select: roles,
-            },
-            join: {
-                date: {
-                    start: member.join,
+                type: "external",
+                external: {
+                    url: member.icon,
                 },
             },
-        },
-    });
+            properties: {
+                name: {
+                    title: [{ text: { content: member.name } }],
+                },
+                id: {
+                    rich_text: [{ text: { content: member.id } }],
+                },
+                icon: {
+                    files: icon,
+                },
+                roles: {
+                    multi_select: roles,
+                },
+                join: {
+                    date: {
+                        start: member.join,
+                    },
+                },
+            },
+        });
+    } catch (e) {
+        console.log(e);
+    }
 }
 
 async function createDiscordMembersJson(nextid = null) {
@@ -353,7 +353,11 @@ async function getMembers(userid = null, next_cursor = null) {
 async function setExit(pageid) {
     const request = { page_id: pageid };
     request.properties = { Exit: { checkbox: true } };
-    const response = await client.pages.update(request);
+    try {
+        const response = await client.pages.update(request);
+    } catch (e) {
+        console.log(e);
+    }
 }
 
 (async () => {
