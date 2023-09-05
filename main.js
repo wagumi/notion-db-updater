@@ -369,7 +369,12 @@ async function setExit(pageid) {
     }
 
     json = [];
-    await createNotionMembersJson();
+    try {
+        await createNotionMembersJson();
+    } catch (e) {
+        console.log(e);
+        throw e;
+    }
     fs.writeFileSync(
         "./json/MEMBERS_NOTION.json",
         JSON.stringify(json, null, 2)
@@ -377,7 +382,12 @@ async function setExit(pageid) {
     console.log(`${json.length}件を出力`);
 
     json = [];
-    await createDiscordMembersJson();
+    try {
+        await createDiscordMembersJson();
+    } catch (e) {
+        console.log(e);
+        throw e;
+    }
     fs.writeFileSync(
         "./json/MEMBERS_DISCORD.json",
         JSON.stringify(json, null, 2)
