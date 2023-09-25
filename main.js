@@ -52,7 +52,7 @@ const start = async () => {
             //&& false
         );
         if (!result) {
-            await updateMember(members_discord[i]);
+           await updateMember(members_discord[i]);
         }
     }
 
@@ -173,36 +173,40 @@ async function addMember(member) {
             },
         });
     }
-    const response = await client.pages.create({
-        parent: {
-            database_id: "4389eeef-9d7f-43bc-a848-3d47c016a764",
-        },
-        icon: {
-            type: "external",
-            external: {
-                url: member.icon,
-            },
-        },
-        properties: {
-            name: {
-                title: [{ text: { content: member.name } }],
-            },
-            id: {
-                rich_text: [{ text: { content: member.id } }],
+    try {
+        const response = await client.pages.create({
+            parent: {
+                database_id: "4389eeef-9d7f-43bc-a848-3d47c016a764",
             },
             icon: {
-                files: icon,
-            },
-            roles: {
-                multi_select: roles,
-            },
-            join: {
-                date: {
-                    start: member.join,
+                type: "external",
+                external: {
+                    url: member.icon,
                 },
             },
-        },
-    });
+            properties: {
+                name: {
+                    title: [{ text: { content: member.name } }],
+                },
+                id: {
+                    rich_text: [{ text: { content: member.id } }],
+                },
+                icon: {
+                    files: icon,
+                },
+                roles: {
+                    multi_select: roles,
+                },
+                join: {
+                    date: {
+                        start: member.join,
+                    },
+                },
+            },
+        });
+    } catch (e) {
+        console.log(e);
+    }
 }
 
 async function createDiscordMembersJson(nextid = null) {
@@ -349,7 +353,11 @@ async function getMembers(userid = null, next_cursor = null) {
 async function setExit(pageid) {
     const request = { page_id: pageid };
     request.properties = { Exit: { checkbox: true } };
-    const response = await client.pages.update(request);
+    try {
+        const response = await client.pages.update(request);
+    } catch (e) {
+        console.log(e);
+    }
 }
 
 (async () => {
@@ -361,7 +369,12 @@ async function setExit(pageid) {
     }
 
     json = [];
-    await createNotionMembersJson();
+    try {
+        await createNotionMembersJson();
+    } catch (e) {
+        console.log(e);
+        throw e;
+    }
     fs.writeFileSync(
         "./json/MEMBERS_NOTION.json",
         JSON.stringify(json, null, 2)
@@ -369,7 +382,12 @@ async function setExit(pageid) {
     console.log(`${json.length}件を出力`);
 
     json = [];
-    await createDiscordMembersJson();
+    try {
+        await createDiscordMembersJson();
+    } catch (e) {
+        console.log(e);
+        throw e;
+    }
     fs.writeFileSync(
         "./json/MEMBERS_DISCORD.json",
         JSON.stringify(json, null, 2)
