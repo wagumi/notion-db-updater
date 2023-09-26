@@ -26,14 +26,16 @@ https://www.notion.so/[ワークスペース名]/[データベース名]?v=3891d
 https://programming-zero.net/notion-api-setting/
 
 上記サイトを参考に以下２点の設定を行なってください。
+```
 ・インテグレーションを作成しシークレットを取得
 ・インテグレーション作成後、上で作成したデータベースのAPI操作を許可
+```
 
 ### discord bot設定
 https://discord.com/developers/docs/ja/getting-started
 
 上記サイトを参考にアプリ・botの作成を行なってください。
-
+```
 1.アプリを作成
 2.左カラムの「Bot」メニューにて
     ・PUBLIC BOTのチェックを入れる
@@ -47,11 +49,15 @@ https://discord.com/developers/docs/ja/getting-started
 ４.生成されたGENERATED URLにブラウザでアクセス
     ・botを追加するサーバを選択(管理者権限が必要です。)し「はい」をクリック
     ・「管理者」権限を与え与えることを確認し「はい」をクリック
+```
 
 ### DISCORD_GUILD_IDを確認
 ブラウザでdiscordにアクセスした際のURLが
+```
 https://discord.com/channels/[GUILD_ID]/[CHANNNEL_ID]
+```
 となっています。
+
 [GUILD_ID]部分を.envファイルのDISCORD_GUILD_IDに記載してください。
 
 ### .envファイルを作成
