@@ -3,11 +3,13 @@ const fetch = require("node-fetch");
 const Notion = require("@notionhq/client");
 require("dotenv").config();
 
-// NOTION MEMBERS DBへの読み取り/書き込み権限を有するAPI-KEY
+// NOTION MEMBERS DBへの読み取り/書き込み権限を有するAPI-KEY/DATABASE_ID
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
+const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID;
 
-// Discordサーバーのユーザー情報読み取り権限を有するBOT-TOKEN
+// Discordサーバーのユーザー情報読み取り権限を有するBOT-TOKEN/GUILD_ID
 const DISCORD_BOT_KEY = process.env.DISCORD_BOT_KEY;
+const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID;
 
 const client = new Notion.Client({
     auth: NOTION_API_KEY,
@@ -176,7 +178,7 @@ async function addMember(member) {
     try {
         const response = await client.pages.create({
             parent: {
-                database_id: "4389eeef-9d7f-43bc-a848-3d47c016a764",
+                database_id: process.env.NOTION_DATABASE_ID,
             },
             icon: {
                 type: "external",
@@ -211,9 +213,9 @@ async function addMember(member) {
 
 async function createDiscordMembersJson(nextid = null) {
     let endpoint =
-        "https://discord.com/api/v10/guilds/914960638365810748/members?limit=1000";
+        `https://discord.com/api/v10/guilds/${DISCORD_GUILD_ID}/members?limit=1000`;
     if (nextid) {
-        endpoint = `https://discord.com/api/v10/guilds/914960638365810748/members?limit=1000&after=${nextid}`;
+        endpoint = `https://discord.com/api/v10/guilds/${DISCORD_GUILD_ID}/members?limit=1000&after=${nextid}`;
     }
 
     const response = await fetch(endpoint, {
@@ -262,7 +264,7 @@ async function createDiscordMembersJson(nextid = null) {
         }
 
         if (data.avatar) {
-            member.icon = `https://cdn.discordapp.com/guilds/914960638365810748/users/${data.user.id}/avatars/${data.avatar}.png`;
+            member.icon = `https://cdn.discordapp.com/guilds/${DISCORD_GUILD_ID}/users/${data.user.id}/avatars/${data.avatar}.png`;
         } else if (data.user.avatar) {
             member.icon = `https://cdn.discordapp.com/avatars/${data.user.id}/${data.user.avatar}.png`;
         } else {
@@ -287,13 +289,14 @@ async function createDiscordMembersJson(nextid = null) {
 }
 
 async function createNotionMembersJson(next_cursor = null) {
-    const request = { database_id: "4389eeef-9d7f-43bc-a848-3d47c016a764" };
+    const request = { database_id: NOTION_DATABASE_ID };
 
     if (next_cursor) {
         request.start_cursor = next_cursor;
     }
 
     const response = await client.databases.query(request);
+
     const members = response.results.map((data) => {
         //console.log(JSON.stringify(data,null,2));
         const member = {};
@@ -318,7 +321,7 @@ async function createNotionMembersJson(next_cursor = null) {
 }
 
 async function getMembers(userid = null, next_cursor = null) {
-    const request = { database_id: "4389eeef-9d7f-43bc-a848-3d47c016a764" };
+    const request = { database_id: NOTION_DATABASE_ID };
     if (userid) {
         request.filter = {
             property: "id",
