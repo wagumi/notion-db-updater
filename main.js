@@ -1,7 +1,36 @@
-const fs = require("fs");
-const fetch = require("node-fetch");
-const Notion = require("@notionhq/client");
-require("dotenv").config();
+import fs from "fs";
+import fetch from "node-fetch";
+import Notion from "@notionhq/client";
+import dotenv from "dotenv";
+import { setTimeout } from "timers/promises";
+import { program } from "commander";
+import { createRequire } from "module";
+dotenv.config();
+
+const modes = [
+  "discordOnly",
+  "notionOnly",
+  "fetchOnly",
+  "addSkip",
+  "updateSkip",
+];
+
+//"set mode [discordOnly,notionOnly,fetchOnly,addSkip,updateSkip]",
+program
+  .option(
+    "-m, --mode <optionValue>",
+    `set mode [${modes.join(",")}]`,
+    "default"
+  )
+  .option("-w, --waitTime <optionValue>", "set waitTime [msec]", 0)
+  .option("-v, --verbose", "verbose", false)
+  .option("-s, --start", "direct start", false)
+  .option("-d, --dryRun", "dry run", false)
+  .option("-l, --limit <optionValue>", "set limit", 0)
+  .option("-f, --from <optionValue>", "set from", 0)
+  .option("-t, --to <optionValue>", "set to", 0);
+program.parse();
+const options = program.opts();
 
 // NOTION MEMBERS DBへの読み取り/書き込み権限を有するAPI-KEY/DATABASE_ID
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
@@ -16,6 +45,14 @@ const client = new Notion.Client({
 });
 
 let json = [];
+let targetTo = 0;
+let targetFrom = 0;
+let targetLimit = 0;
+let addCnt = 0;
+let updateCnt = 0;
+let exitCnt = 0;
+let workingId = 0;
+let failedList = [];
 
 const roles = {
   "914960638365810749": "Admin",
@@ -35,36 +72,93 @@ const roles = {
   "1085850046630744084": "Product Leader",
 };
 
+const setOption = () => {
+  if (options.mode != "default" && modes.indexOf(options.mode) === -1) {
+    console.log("invalid mode: " + options.mode);
+    return false;
+  }
+  if (options.mode != "default") {
+    console.log(options.mode + " mode");
+  }
+  targetFrom = parseInt(options.from);
+  targetTo = parseInt(options.to);
+  targetLimit = parseInt(options.limit);
+  if (targetLimit > 0 && targetTo == 0 && targetFrom == 0) {
+    targetFrom = 0;
+    targetTo = targetLimit;
+  } else if (targetLimit == 0 && targetTo == 0 && targetFrom > 0) {
+    targetTo = targetFrom;
+  } else if (targetTo == 0 && targetLimit > 0) {
+    targetTo = targetFrom + targetLimit - 1;
+  } else if (targetTo - targetFrom < 0) {
+    targetTo = NaN;
+  } else if (targetLimit != 0 && targetTo - targetFrom > targetLimit) {
+    targetTo = targetFrom + targetLimit - 1;
+  }
+
+  if (isNaN(targetTo)) {
+    console.log(
+      `oprion error from:${options.from} from:${options.from} limit:${options.limit}`
+    );
+    return false;
+  }
+
+  if (targetTo > 0) {
+    console.log("from:" + targetFrom + " to:" + targetTo);
+  }
+  return true;
+};
+
+const sleep = (waitTime) => {
+  if (waitTime < 1) {
+    return;
+  }
+  console.log(`sleep ${waitTime} msec`);
+  const startTime = Date.now();
+  while (Date.now() - startTime < waitTime);
+};
+
 const start = async () => {
+  const require = createRequire(import.meta.url);
   const members_notion = require("./json/MEMBERS_NOTION.json");
   const members_discord = require("./json/MEMBERS_DISCORD.json");
 
   for (let i = 0; i < members_discord.length; i++) {
-    const result = members_notion.find(
-      (member_n) =>
-        member_n.id === members_discord[i].id &&
-        member_n.name === members_discord[i].name &&
-        member_n.roles.filter(
-          (data) => members_discord[i].roles.indexOf(data) === -1
-        ).length === 0 &&
-        members_discord[i].roles.filter(
-          (data) => member_n.roles.indexOf(data) === -1
-        ).length === 0 &&
-        member_n.icon === members_discord[i].icon
-      //&& false
-    );
-    if (!result) {
-      await updateMember(members_discord[i]);
-    }
-  }
+    workingId = i;
+    if (
+      (targetFrom == 0 && targetTo == 0) ||
+      (i >= targetFrom && i <= targetTo)
+    ) {
+      const notionPage = members_notion.find(
+        (member) => member.id === members_discord[i].id
+      );
 
-  for (let i = 0; i < members_discord.length; i++) {
-    const result = members_notion.find(
-      (member_n) => member_n.id === members_discord[i].id
-    );
-    if (!result) {
-      console.log("ADD", members_discord[i]);
-      await addMember(members_discord[i]);
+      if (notionPage) {
+        const updateCheck = members_notion.find(
+          (member_n) =>
+            member_n.id === members_discord[i].id &&
+            member_n.name === members_discord[i].name &&
+            member_n.roles.filter(
+              (data) => members_discord[i].roles.indexOf(data) === -1
+            ).length === 0 &&
+            members_discord[i].roles.filter(
+              (data) => member_n.roles.indexOf(data) === -1
+            ).length === 0 &&
+            member_n.icon === members_discord[i].icon
+          //&& false
+        );
+        if (!updateCheck) {
+          await updateMember(members_discord[i], notionPage.page_id);
+        } else {
+          if (options.verbose) {
+            console.log(
+              `STAY: ${workingId} ${members_discord[i].id} ${members_discord[i].name}`
+            );
+          }
+        }
+      } else {
+        await addMember(members_discord[i]);
+      }
     }
   }
 
@@ -73,19 +167,33 @@ const start = async () => {
       (member) => member.id === members_notion[i].id
     );
     if (!result) {
-      console.log("EXIT", members_notion[i]);
-      await setExit(members_notion[i].page_id);
+      await setExit(members_notion[i]);
     }
+  }
+
+  console.log("add " + addCnt);
+  console.log("update " + updateCnt);
+  console.log("exit " + exitCnt);
+  if (failedList.length > 0) {
+    console.log("failedList");
+    console.dir(failedList);
   }
 };
 
-async function updateMember(member) {
-  const page = await getMembers(member.id);
-  if (!page) {
-    console.log(member.id);
+async function updateMember(member, page_id) {
+  updateCnt++;
+  if (options.mode == "updateSkip") {
+    console.log(
+      `UPDATE: ${workingId} ${member.id} ${member.name} (mode:updateSkip)`
+    );
     return;
   }
-  console.log(member);
+  if (options.dryRun) {
+    console.log(`UPDATE: ${workingId} ${member.id} ${member.name} (dry run)`);
+    return;
+  }
+  console.log(`UPDATE: ${workingId} ${member.id} ${member.name}`);
+  sleep(options.waitTime);
 
   const roles = [];
   for (let i = 0; i < member.roles.length; i++) {
@@ -112,7 +220,7 @@ async function updateMember(member) {
   }
   try {
     const update = await client.pages.update({
-      page_id: page.id,
+      page_id: page_id,
       icon: {
         type: "external",
         external: {
@@ -140,18 +248,34 @@ async function updateMember(member) {
       },
     });
   } catch (e) {
-    console.log(e);
+    console.log("message" + e.message);
+    console.log("status:" + e.code);
+    failedList.push(workingId);
   }
   //console.log(update);
 }
 
 async function addMember(member) {
-  const page = await getMembers(member.id);
-  if (page) {
-    console.log(`${member.id} ${member.username} is already registered`);
+  addCnt++;
+  if (options.mode == "addSkip") {
+    console.log(`ADD: ${workingId} ${member.id} ${member.name} (mode:addSkip)`);
     return;
   }
-  //console.log(member);
+  if (options.dryRun) {
+    console.log(`ADD: ${workingId} ${member.id} ${member.name} (dry run)`);
+    return;
+  }
+
+  const page = await getMembers(member.id);
+  if (page) {
+    console.log(
+      `ADD: ${workingId} ${member.id} ${member.name} is already registered`
+    );
+    return;
+  }
+
+  console.log(`ADD: ${workingId} ${member.id} ${member.name}`);
+  sleep(options.waitTime);
 
   const roles = [];
   for (let i = 0; i < member.roles.length; i++) {
@@ -207,7 +331,9 @@ async function addMember(member) {
       },
     });
   } catch (e) {
-    console.log(e);
+    console.log("message" + e.message);
+    console.log("status:" + e.code);
+    failedList.push(workingId);
   }
 }
 
@@ -277,7 +403,7 @@ async function createDiscordMembersJson(nextid = null) {
   if (result.length === 1000) {
     const headers = await response.headers;
     if (headers.get("x-ratelimit-remaining") <= 1) {
-      const { setTimeout } = require("timers/promises");
+      //const { setTimeout } = require("timers/promises");
       console.log("set timeout", headers.get("x-ratelimit-reset-after"));
       await setTimeout(headers.get("x-ratelimit-reset-after") * 1100);
     }
@@ -296,7 +422,7 @@ async function createNotionMembersJson(next_cursor = null) {
   const response = await client.databases.query(request);
 
   const members = response.results.map((data) => {
-    //console.log(JSON.stringify(data,null,2));
+    // console.log(JSON.stringify(data,null,2));
     const member = {};
     member.id = data.properties.id.rich_text[0].plain_text;
     member.name = data.properties.name.title[0].plain_text;
@@ -308,12 +434,19 @@ async function createNotionMembersJson(next_cursor = null) {
       member.icon = data.properties.icon.files[0].external.url;
     }
     member.page_id = data.id;
-    console.log(member);
+
+    if (options.verbose) {
+      console.log(
+        "notion data memberid:" + member.id + "(" + member.name + ")"
+      );
+    }
     return member;
   });
   json = json.concat(members);
   if (response.has_more) {
-    console.log(json.length);
+    console.log(
+      "notion data count: " + json.length + " next " + response.next_cursor
+    );
     await createNotionMembersJson(response.next_cursor);
   }
 }
@@ -332,27 +465,43 @@ async function getMembers(userid = null, next_cursor = null) {
     request.start_cursor = next_cursor;
   }
 
-  const response = await client.databases.query(request);
-  const members = response.results.map((member) => {
-    const pageid = member.id;
-    const id = member.properties.id.rich_text[0].plain_text;
-    const name = member.properties.name.title[0].plain_text;
-    const roles = member.properties.roles.multi_select.map((role) => {
-      return role.name;
+  try {
+    const response = await client.databases.query(request);
+    const members = response.results.map((member) => {
+      const pageid = member.id;
+      const id = member.properties.id.rich_text[0].plain_text;
+      const name = member.properties.name.title[0].plain_text;
+      const roles = member.properties.roles.multi_select.map((role) => {
+        return role.name;
+      });
+      return member;
     });
-    return member;
-  });
 
-  if (response.has_more) {
-    await getMembers(userid, response.next_cursor);
-    return members[0];
-  } else {
-    return members[0];
+    if (response.has_more) {
+      await getMembers(userid, response.next_cursor);
+      return members[0];
+    } else {
+      return members[0];
+    }
+  } catch (e) {
+    console.log("message" + e.message);
+    console.log("status:" + e.code);
+    failedList.push(workingId);
+    return false;
   }
 }
 
-async function setExit(pageid) {
-  const request = { page_id: pageid };
+async function setExit(member) {
+  exitCnt++;
+  if (options.dryRun) {
+    console.log(
+      `Exit: ${member.id} ${member.name} ${member.page_id} (dry_run)`
+    );
+    return;
+  }
+  console.log(`Exit: ${member.id} ${member.name} ${member.page_id}`);
+
+  const request = { page_id: member.page_id };
   request.properties = { Exit: { checkbox: true } };
   try {
     const response = await client.pages.update(request);
@@ -362,35 +511,53 @@ async function setExit(pageid) {
 }
 
 (async () => {
-  console.log("start");
+  if (!setOption()) {
+    return;
+  }
 
   if (!fs.existsSync("./json")) {
     fs.mkdirSync("./json");
     console.log("Created json folder");
   }
 
-  json = [];
-  try {
-    await createNotionMembersJson();
-  } catch (e) {
-    console.log(e);
-    throw e;
-  }
-  fs.writeFileSync("./json/MEMBERS_NOTION.json", JSON.stringify(json, null, 2));
-  console.log(`${json.length}件を出力`);
+  if (!options.start) {
+    if (options.mode != "discordOnly") {
+      console.log(`fetch notion member`);
+      json = [];
+      try {
+        await createNotionMembersJson();
+      } catch (e) {
+        console.log(e);
+        throw e;
+      }
+      fs.writeFileSync(
+        "./json/MEMBERS_NOTION.json",
+        JSON.stringify(json, null, 2)
+      );
+      console.log(`notion member : ${json.length}`);
+    }
 
-  json = [];
-  try {
-    await createDiscordMembersJson();
-  } catch (e) {
-    console.log(e);
-    throw e;
+    if (options.mode != "notionOnly") {
+      console.log(`fetch discord member`);
+      json = [];
+      try {
+        await createDiscordMembersJson();
+      } catch (e) {
+        console.log(e);
+        throw e;
+      }
+      fs.writeFileSync(
+        "./json/MEMBERS_DISCORD.json",
+        JSON.stringify(json, null, 2)
+      );
+      console.log(`discord member : ${json.length}`);
+    }
   }
-  fs.writeFileSync(
-    "./json/MEMBERS_DISCORD.json",
-    JSON.stringify(json, null, 2)
-  );
-  console.log(`${json.length}件を出力`);
-
-  await start();
+  if (
+    options.mode != "fetchOnly" &&
+    options.mode != "discordOnly" &&
+    options.mode != "notionOnly"
+  ) {
+    await start();
+  }
 })();
