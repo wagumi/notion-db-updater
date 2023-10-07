@@ -100,10 +100,8 @@ node main.js
 ```
 Options:
   -m, --mode <optionValue>      set mode [discordOnly,notionOnly,fetchOnly,addSkip,updateSkip] (default: "default")
-  -w, --waitTime <optionValue>  set waitTime [msec] (default: 0)
   -v, --verbose                 verbose (default: false)
   -s, --start                   direct start (default: false)
-  -d, --dryRun                  dry run (default: false)
   -l, --limit <optionValue>     set limit (default: 0)
   -f, --from <optionValue>      set from (default: 0)
   -t, --to <optionValue>        set to (default: 0)
