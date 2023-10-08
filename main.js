@@ -72,7 +72,8 @@ const start = async () => {
               (data) => member_n.roles.indexOf(data) === -1
             ).length === 0 &&
             (member_n.icon === members_discord[i].icon ||
-              member_n.icon === CONSTANTS.DISCORD_DUMMY_ICON)
+              member_n.icon === CONSTANTS.DISCORD_DUMMY_ICON) &&
+            member_n.exit === false
           //&& false
         );
         if (!updateCheck) {
@@ -164,6 +165,9 @@ async function updateMember(member, page_id) {
       },
       icon: {
         files: icon,
+      },
+      Exit: {
+        checkbox: false,
       },
     },
   });
