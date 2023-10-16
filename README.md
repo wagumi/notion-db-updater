@@ -1,13 +1,17 @@
 # notion-db-updater
+
 A script to update particular Notion databases
 
-## 開発環境SETUP
+## 開発環境 SETUP
 
-### NOTIONでワークスペースを作成
+### NOTION でワークスペースを作成
+
 https://www.notion.so/ja-jp
 
 ### 作成したワークスペースでデータベースを作成
+
 ページを追加 > テーブル > 新規データベース
+
 ```
 カラム名:id 種類: テキスト
 カラム名:name 種類: タイトル
@@ -17,24 +21,29 @@ https://www.notion.so/ja-jp
 カラム名:exit 種類: チェックボックス
 ```
 
-作成したデータベースのURLは以下の通りになります。
+作成したデータベースの URL は以下の通りになります。
+
 ```
 https://www.notion.so/[ワークスペース名]/[データベース名]?v=3891d2debca84a359709e0697b99aa20
 ```
 
 ### notion api setting
+
 https://programming-zero.net/notion-api-setting/
 
 上記サイトを参考に以下２点の設定を行なってください。
+
 ```
 ・インテグレーションを作成しシークレットを取得
 ・インテグレーション作成後、上で作成したデータベースのAPI操作を許可
 ```
 
-### discord bot設定
+### discord bot 設定
+
 https://discord.com/developers/docs/ja/getting-started
 
-上記サイトを参考にアプリ・botの作成を行なってください。
+上記サイトを参考にアプリ・bot の作成を行なってください。
+
 ```
 1.アプリを作成
 2.左カラムの「Bot」メニューにて
@@ -51,17 +60,22 @@ https://discord.com/developers/docs/ja/getting-started
     ・「管理者」権限を与え与えることを確認し「はい」をクリック
 ```
 
-### DISCORD_GUILD_IDを確認
-ブラウザでdiscordにアクセスした際のURLが
+### DISCORD_GUILD_ID を確認
+
+ブラウザで discord にアクセスした際の URL が
+
 ```
 https://discord.com/channels/[GUILD_ID]/[CHANNNEL_ID]
 ```
+
 となっています。
 
-[GUILD_ID]部分を.envファイルのDISCORD_GUILD_IDに記載してください。
+[GUILD_ID]部分を.env ファイルの DISCORD_GUILD_ID に記載してください。
 
-### .envファイルを作成
-.env.exampleをコピーして.envファイルを作成し各環境変数を設定してください
+### .env ファイルを作成
+
+.env.example をコピーして.env ファイルを作成し各環境変数を設定してください
+
 ```
 DISCORD_BOT_KEY=[discordボットのキー]
 DISCORD_GUILD_ID=[discordのguildID]
@@ -69,12 +83,27 @@ NOTION_API_KEY=[インテグレーションのシークレット]
 NOTION_DATABASE_ID=[notionで作ったデータベース名]
 ```
 
-### node_modules取得
+### node_modules 取得
+
 ```
 npm install
 ```
 
 ### スクリプト実行
+
 ```
 node main.js
+```
+
+### オプション
+
+```
+Options:
+  -m, --mode <optionValue>      set mode [discordOnly,notionOnly,fetchOnly,addSkip,updateSkip] (default: "default")
+  -v, --verbose                 verbose (default: false)
+  -s, --start                   direct start (default: false)
+  -l, --limit <optionValue>     set limit (default: 0)
+  -f, --from <optionValue>      set from (default: 0)
+  -t, --to <optionValue>        set to (default: 0)
+  -h, --help                    display help for command
 ```
