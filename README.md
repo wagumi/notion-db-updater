@@ -53,7 +53,7 @@ https://discord.com/developers/docs/ja/getting-started
     ・「save changes」をクリックし変更を保存
 3.左カラムの「OAuth > URL Generator」にて
     ・SCOPES欄の「bot」をチェック
-    ・BOT PERMISSIONSの「Administrator」をチェック
+    ・BOT PERMISSIONSの「Modelate Members」をチェック(必要に応じた権限設定を行ってください)
     ・生成される「GENERATED URL」をコピー機しておいてください。
 ４.生成されたGENERATED URLにブラウザでアクセス
     ・botを追加するサーバを選択(管理者権限が必要です。)し「はい」をクリック
@@ -81,6 +81,22 @@ DISCORD_BOT_KEY=[discordボットのキー]
 DISCORD_GUILD_ID=[discordのguildID]
 NOTION_API_KEY=[インテグレーションのシークレット]
 NOTION_DATABASE_ID=[notionで作ったデータベース名]
+```
+
+### customSettings.js ファイルを作成
+
+customSettings.js.example をコピーして customSettings ファイルを作成し 実際に利用する discord の RoleID とロール名称のマッピングを設定してください
+
+```
+export const CUSTOM_SETTINGS = {
+  // 実際に利用するdiscordのRoleIDとロール名称のマッピングを設定してください
+  roles: {
+    "1143943645205102632": "Admins",
+    "1206600859962834954": "Member",
+    "1206867833292722236": "CommunityManager",
+    "1210764298280902656": "Supporter",
+  },
+};
 ```
 
 ### node_modules 取得
