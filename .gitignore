@@ -131,3 +131,6 @@ dist
 
 # json folder for temporary json files
 json
+
+# cusom settings
+common/customSettings.js

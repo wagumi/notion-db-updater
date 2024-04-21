@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import { setTimeout } from "timers/promises";
 import { program } from "commander";
 import { createRequire } from "module";
-import { CONSTANTS, sleep } from "./common/common.js";
+import { CONSTANTS } from "./common/common.js";
 import { setOptions, getModes } from "./common/options.js";
 import {
   notionCreate,
@@ -35,8 +35,17 @@ let updateCnt = 0;
 let exitCnt = 0;
 let workingId = 0;
 let failedList = [];
+let roles = CONSTANTS.roles;
 
-const roles = CONSTANTS.roles;
+async function loadCustomConstants() {
+  try {
+    const { CUSTOM_SETTINGS } = await import("./common/customSettings.js");
+    roles = CUSTOM_SETTINGS.roles;
+  } catch (error) {
+    console.info("use original roles");
+  }
+}
+await loadCustomConstants();
 
 const setOption = () => {
   const result = setOptions(options);
