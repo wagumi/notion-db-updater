@@ -24,7 +24,7 @@ https://www.notion.so/ja-jp
 作成したデータベースの URL は以下の通りになります。
 
 ```
-https://www.notion.so/[ワークスペース名]/[データベース名]?v=3891d2debca84a359709e0697b99aa20
+https://www.notion.so/[ワークスペース名]/[データベース名]?v=XXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 
 ### notion api setting
@@ -53,10 +53,10 @@ https://discord.com/developers/docs/ja/getting-started
     ・「save changes」をクリックし変更を保存
 3.左カラムの「OAuth > URL Generator」にて
     ・SCOPES欄の「bot」をチェック
-    ・BOT PERMISSIONSの「Modelate Members」をチェック(必要に応じた権限設定を行ってください)
+    ・BOT PERMISSIONSを必要に応じ設定(メンバーリストの読み込み限定にする場合は不要)
     ・生成される「GENERATED URL」をコピー機しておいてください。
 ４.生成されたGENERATED URLにブラウザでアクセス
-    ・botを追加するサーバを選択(管理者権限が必要です。)し「はい」をクリック
+    ・botを追加するサーバを選択(管理者権限が必要です)し「はい」をクリック
     ・「管理者」権限を与え与えることを確認し「はい」をクリック
 ```
 
@@ -85,16 +85,17 @@ NOTION_DATABASE_ID=[notionで作ったデータベース名]
 
 ### customSettings.js ファイルを作成
 
-customSettings.js.example をコピーして customSettings ファイルを作成し 実際に利用する discord の RoleID とロール名称のマッピングを設定してください
+customSettings.js.example をコピーして customSettings ファイルを作成し 実際に利用する discord の RoleID とロール名称のマッピングを設定してください。
+※ ユーザーについているロールを右クリックすることで、ID をコピーできます。 または、ロールの設定からロールを右クリックすることでも ID をコピーできます。
 
 ```
 export const CUSTOM_SETTINGS = {
   // 実際に利用するdiscordのRoleIDとロール名称のマッピングを設定してください
   roles: {
-    "1143943645205102632": "Admins",
-    "1206600859962834954": "Member",
-    "1206867833292722236": "CommunityManager",
-    "1210764298280902656": "Supporter",
+    "1000000000000000000": "Admins",
+    "1000000000000000001": "Member",
+    "1000000000000000002": "CommunityManager",
+    "1000000000000000003": "Supporter",
   },
 };
 ```
