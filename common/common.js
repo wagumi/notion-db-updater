@@ -13,23 +13,7 @@ export const randomInt = (max) => {
 };
 
 export const CONSTANTS = {
-  roles: {
-    "914960638365810749": "Admin",
-    "915354258310832232": "Server Booster",
-    "923625522485932112": "AMA",
-    "923625906696769556": "Community",
-    "923663531176493106": "Wagumi Cats",
-    "924463951524290560": "AMA Leader",
-    "924473090325504031": "Newsletter",
-    "924464553683738665": "Newsletter Leader",
-    "924464899562827797": "Community Leader",
-    "924473090325504031": "Newsletter",
-    "948119284637384744": "Investor",
-    "1017617843916902411": "Wagumi SBT",
-    "1054207962819858493": "Moderator",
-    "1067826090611064842": "Product",
-    "1085850046630744084": "Product Leader",
-  },
+  roles: {},
   // NOTION MEMBERS DBへの読み取り/書き込み権限を有するAPI-KEY/DATABASE_ID
   NOTION_API_KEY: process.env.NOTION_API_KEY,
   NOTION_DATABASE_ID: process.env.NOTION_DATABASE_ID,
